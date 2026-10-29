@@ -2,121 +2,240 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Rastreamento Veicular</title>
-  <link rel="stylesheet" href="estilo.css">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <title>Meu IPTV Player para TV</title>
+  <!-- Biblioteca para reproduzir vídeos .m3u8 -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: #0f172a;
+      color: #fff;
+      font-family: sans-serif;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Menu Lateral de Canais */
+    #sidebar {
+      width: 35%;
+      height: 100%;
+      background-color: #1e293b;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    h2 { margin-bottom: 12px; color: #38bdf8; font-size: 1.3rem; }
+
+    /* Área de Inserção de Link */
+    .input-box {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 15px;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #475569;
+      background-color: #0f172a;
+      color: #fff;
+      font-size: 0.95rem;
+      outline: none;
+    }
+
+    input[type="text"]:focus {
+      border-color: #38bdf8;
+    }
+
+    button.btn-load {
+      padding: 10px 15px;
+      background-color: #0284c7;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      outline: none;
+    }
+
+    button.btn-load:hover, button.btn-load:focus {
+      background-color: #0369a1;
+    }
+
+    /* Lista com Scroll */
+    #channel-list {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 5px;
+    }
+
+    .channel-item {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 12px 15px;
+      margin-bottom: 8px;
+      background-color: #334155;
+      color: #fff;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      border: 2px solid transparent;
+      outline: none;
+    }
+
+    /* Estilo de Destaque para Seleção via Controle Remoto ou Mouse */
+    .channel-item:focus, .channel-item:hover {
+      background-color: #0284c7;
+      border-color: #38bdf8;
+    }
+
+    /* Área do Player de Vídeo */
+    #player-container {
+      width: 65%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #000;
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      max-height: 100vh;
+    }
+  </style>
 </head>
-
 <body>
-  <!-- TELA DE LOGIN -->
-  <div id="tela-login" class="tela">
-    <div class="caixa-login">
-      <h1>🚗 Rastreamento Veicular</h1>
-      <p id="versao-sistema" style="font-size: 12px; color:#888; margin-top:5px;"></p>
-      <form id="form-entrar" onsubmit="event.preventDefault(); fazerLogin();">
-        <h2>Entrar</h2>
-        <input type="text" id="usuario" placeholder="Usuário" autocomplete="username" required>
-        <input type="password" id="senha" placeholder="Senha" autocomplete="current-password" required>
-        <p id="erro-login" class="erro"></p>
-        <button type="submit">Entrar</button>
-      </form>
+
+  <!-- Sidebar com Input + Lista -->
+  <div id="sidebar">
+    <h2>📺 Lista de Canais</h2>
+    
+    <!-- Formulário para colar o Link M3U -->
+    <div class="input-box">
+      <input type="text" id="m3u-url" placeholder="Cole o link M3U aqui..." />
+      <button class="btn-load" id="btn-carregar" onclick="customLoad()">Carregar</button>
     </div>
+
+    <div id="channel-list">Informe um link M3U acima e clique em carregar.</div>
   </div>
 
-  <!-- TELA PRINCIPAL -->
-  <div id="tela-principal" class="tela escondida">
-    <!-- FAIXA BRANCA NO TOPO -->
-    <header class="faixa-topo">
-      <h1>🚗 Rastreamento Veicular</h1>
-      <div class="faixa-botoes">
-        <span id="nome-usuario-logado"></span>
-        
-        <!-- BOTÕES DO MAPA NA FAIXA DO TOPO -->
-        <button id="btnRuas" class="btn-mapa ativo" onclick="trocarMapa('ruas')">🗺️ Ruas</button>
-        <button id="btnSat" class="btn-mapa" onclick="trocarMapa('satellite')">🛰️ Satélite</button>
-        
-        <button id="btn-gerenciar" class="btn-secundario escondida" onclick="abrirFecharPainel()">⚙️ Gerenciar</button>
-        <button class="btn-sair" onclick="sair()">Sair</button>
-      </div>
-    </header>
-
-    <!-- MAPA -->
-    <div id="mapa"></div>
-
-    <!-- PAINEL ÚNICO NO DIREITO → Lista compacta -->
-    <div class="barra-lateral-flutuante barra-direita" id="painel-principal">
-      <h3 id="titulo-painel">Meus Veículos</h3>
-      <div id="lista-veiculos"></div>
-      <div id="ultima-atualizacao" class="rodape-lista"></div>
-    </div>
-
-    <!-- CARTÃO DE DETALHES — APARECE AO CLICAR -->
-    <div id="cartao-detalhes" class="cartao-detalhes">
-      <div class="cartao-cabecalho">
-        <h3 id="cartao-nome"></h3>
-        <button class="cartao-fechar" onclick="fecharCartao()">&times;</button>
-      </div>
-      <p><strong>Placa:</strong> <span id="cartao-placa"></span></p>
-      <p><strong>IMEI:</strong> <span id="cartao-imei"></span></p>
-      <p id="cartao-dono-linha" class="dono-tag"></p>
-      
-      <div class="cartao-km">
-        <span class="km-item diario">Hoje<br><strong id="cartao-km-hoje"></strong></span>
-        <span class="km-item semanal">7 Dias<br><strong id="cartao-km-7dias"></strong></span>
-        <span class="km-item mensal">30 Dias<br><strong id="cartao-km-30dias"></strong></span>
-      </div>
-      
-      <div class="cartao-status">
-        <strong>Status:</strong> <span id="cartao-status"></span><br>
-        <strong>Velocidade:</strong> <span id="cartao-velocidade"></span><br>
-        <strong>Última atualização:</strong> <span id="cartao-horario"></span>
-      </div>
-      
-      <button class="btn-seguir" id="btn-seguir-cartao" style="margin-top:12px;" onclick="alternarSeguirAtual()">
-        📍 Seguir no mapa
-      </button>
-    </div>
-
-    <!-- PAINEL ADMINISTRADOR CENTRAL -->
-    <div id="painel-adm" class="painel-central escondida">
-      <div class="painel-conteudo">
-        <span class="fechar-painel" onclick="abrirFecharPainel()">&times;</span>
-        <h2>👑 Painel de Controle</h2>
-        
-        <div class="secao-adm">
-          <h3>➕ Criar Usuário</h3>
-          <input type="text" id="novo-usuario" placeholder="Nome do usuário">
-          <input type="password" id="nova-senha" placeholder="Senha (mín. 4 caracteres)">
-          <input type="password" id="confirma-senha" placeholder="Repetir senha">
-          <p id="erro-cadastro" class="erro"></p>
-          <button onclick="criarConta()">✅ Criar Conta</button>
-        </div>
-        
-        <div class="secao-adm">
-          <h3>🚙 Cadastrar Veículo</h3>
-          <input type="text" id="campo-nome" placeholder="Nome / Modelo">
-          <input type="text" id="campo-placa" placeholder="Placa">
-          <input type="text" id="campo-imei" placeholder="IMEI do Rastreador">
-          <input type="text" id="campo-cor" placeholder="Cor / Observação">
-          <input type="text" id="campo-usuario-dono" placeholder="Usuário DONO">
-          <button onclick="salvarVeiculo()">💾 Salvar Veículo</button>
-        </div>
-        
-        <div class="secao-adm">
-          <h3>👤 Usuários Cadastrados</h3>
-          <div id="lista-todos-usuarios"></div>
-        </div>
-        
-        <div class="secao-adm">
-          <h3>🚘 Todos os Veículos</h3>
-          <div id="lista-todos-veiculos"></div>
-        </div>
-      </div>
-    </div>
+  <!-- Player de Vídeo -->
+  <div id="player-container">
+    <video id="video-player" controls autoplay></video>
   </div>
 
-  <script src="codigo.js?v=15.12"></script>
+  <script>
+    // URL Padrão caso o usuário não tenha salvo nenhuma
+    const DEFAULT_URL = "https://iptv-org.github.io/iptv/languages/por.m3u";
+    
+    const urlInput = document.getElementById("m3u-url");
+    const channelListEl = document.getElementById("channel-list");
+    const video = document.getElementById("video-player");
+    let hls = new Hls();
+
+    // Carrega a URL salva no navegador ou a padrão ao abrir
+    window.onload = () => {
+      const savedUrl = localStorage.getItem("iptv_custom_url") || DEFAULT_URL;
+      urlInput.value = savedUrl;
+      fetchAndParseM3U(savedUrl);
+    };
+
+    // Função disparada ao clicar no botão Carregar
+    function customLoad() {
+      const url = urlInput.value.trim();
+      if (url) {
+        localStorage.setItem("iptv_custom_url", url); // Salva no cache do navegador
+        fetchAndParseM3U(url);
+      } else {
+        alert("Por favor, cole um link M3U válido!");
+      }
+    }
+
+    // Permite apertar Enter no campo de texto para carregar
+    urlInput.addEventListener("keyup", (event) => {
+      if (event.key === "Enter") {
+        customLoad();
+      }
+    });
+
+    // Faz o download e parse da lista M3U
+    async function fetchAndParseM3U(url) {
+      channelListEl.innerText = "Carregando lista de canais...";
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error("Não foi possível acessar a URL.");
+        const text = await response.text();
+        const channels = parseM3U(text);
+        
+        if (channels.length === 0) {
+          channelListEl.innerText = "Nenhum canal encontrado nessa lista.";
+          return;
+        }
+
+        renderChannels(channels);
+      } catch (err) {
+        channelListEl.innerText = "Erro ao carregar a lista. Verifique se o link está correto e permite acesso externo (CORS).";
+      }
+    }
+
+    // Extrai Nomes e Links .m3u8 do texto do arquivo .m3u
+    function parseM3U(m3uText) {
+      const lines = m3uText.split('\n');
+      const channels = [];
+      let currentName = "";
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (line.startsWith("#EXTINF:")) {
+          const commaIndex = line.lastIndexOf(',');
+          currentName = commaIndex !== -1 ? line.substring(commaIndex + 1) : "Canal sem nome";
+        } else if (line.startsWith("http")) {
+          channels.push({ name: currentName, url: line });
+        }
+      }
+      return channels;
+    }
+
+    // Renderiza os botões na tela
+    function renderChannels(channels) {
+      channelListEl.innerHTML = "";
+      
+      channels.forEach((ch, index) => {
+        const btn = document.createElement("button");
+        btn.className = "channel-item";
+        btn.innerText = ch.name;
+        btn.tabIndex = index + 2; // Mantém navegação fluida via teclado/D-Pad
+
+        btn.onclick = () => playStream(ch.url);
+        
+        btn.onkeydown = (e) => {
+          if (e.key === "Enter") playStream(ch.url);
+        };
+
+        channelListEl.appendChild(btn);
+      });
+    }
+
+    // Executa o vídeo usando HLS.js
+    function playStream(url) {
+      if (Hls.isSupported()) {
+        hls.destroy(); // Reseta player anterior
+        hls = new Hls();
+        hls.loadSource(url);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = url;
+        video.play();
+      }
+    }
+  </script>
 </body>
 </html>
