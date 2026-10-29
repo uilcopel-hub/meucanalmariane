@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rastreamento Veicular</title>
+  <link rel="stylesheet" href="estilo.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+
+<body>
+  <!-- TELA DE LOGIN -->
+  <div id="tela-login" class="tela">
+    <div class="caixa-login">
+      <h1>🚗 Rastreamento Veicular</h1>
+      <p id="versao-sistema" style="font-size: 12px; color:#888; margin-top:5px;"></p>
+      <form id="form-entrar" onsubmit="event.preventDefault(); fazerLogin();">
+        <h2>Entrar</h2>
+        <input type="text" id="usuario" placeholder="Usuário" autocomplete="username" required>
+        <input type="password" id="senha" placeholder="Senha" autocomplete="current-password" required>
+        <p id="erro-login" class="erro"></p>
+        <button type="submit">Entrar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- TELA PRINCIPAL -->
+  <div id="tela-principal" class="tela escondida">
+    <!-- FAIXA BRANCA NO TOPO -->
+    <header class="faixa-topo">
+      <h1>🚗 Rastreamento Veicular</h1>
+      <div class="faixa-botoes">
+        <span id="nome-usuario-logado"></span>
+        
+        <!-- BOTÕES DO MAPA NA FAIXA DO TOPO -->
+        <button id="btnRuas" class="btn-mapa ativo" onclick="trocarMapa('ruas')">🗺️ Ruas</button>
+        <button id="btnSat" class="btn-mapa" onclick="trocarMapa('satellite')">🛰️ Satélite</button>
+        
+        <button id="btn-gerenciar" class="btn-secundario escondida" onclick="abrirFecharPainel()">⚙️ Gerenciar</button>
+        <button class="btn-sair" onclick="sair()">Sair</button>
+      </div>
+    </header>
+
+    <!-- MAPA -->
+    <div id="mapa"></div>
+
+    <!-- PAINEL ÚNICO NO DIREITO → Lista compacta -->
+    <div class="barra-lateral-flutuante barra-direita" id="painel-principal">
+      <h3 id="titulo-painel">Meus Veículos</h3>
+      <div id="lista-veiculos"></div>
+      <div id="ultima-atualizacao" class="rodape-lista"></div>
+    </div>
+
+    <!-- CARTÃO DE DETALHES — APARECE AO CLICAR -->
+    <div id="cartao-detalhes" class="cartao-detalhes">
+      <div class="cartao-cabecalho">
+        <h3 id="cartao-nome"></h3>
+        <button class="cartao-fechar" onclick="fecharCartao()">&times;</button>
+      </div>
+      <p><strong>Placa:</strong> <span id="cartao-placa"></span></p>
+      <p><strong>IMEI:</strong> <span id="cartao-imei"></span></p>
+      <p id="cartao-dono-linha" class="dono-tag"></p>
+      
+      <div class="cartao-km">
+        <span class="km-item diario">Hoje<br><strong id="cartao-km-hoje"></strong></span>
+        <span class="km-item semanal">7 Dias<br><strong id="cartao-km-7dias"></strong></span>
+        <span class="km-item mensal">30 Dias<br><strong id="cartao-km-30dias"></strong></span>
+      </div>
+      
+      <div class="cartao-status">
+        <strong>Status:</strong> <span id="cartao-status"></span><br>
+        <strong>Velocidade:</strong> <span id="cartao-velocidade"></span><br>
+        <strong>Última atualização:</strong> <span id="cartao-horario"></span>
+      </div>
+      
+      <button class="btn-seguir" id="btn-seguir-cartao" style="margin-top:12px;" onclick="alternarSeguirAtual()">
+        📍 Seguir no mapa
+      </button>
+    </div>
+
+    <!-- PAINEL ADMINISTRADOR CENTRAL -->
+    <div id="painel-adm" class="painel-central escondida">
+      <div class="painel-conteudo">
+        <span class="fechar-painel" onclick="abrirFecharPainel()">&times;</span>
+        <h2>👑 Painel de Controle</h2>
+        
+        <div class="secao-adm">
+          <h3>➕ Criar Usuário</h3>
+          <input type="text" id="novo-usuario" placeholder="Nome do usuário">
+          <input type="password" id="nova-senha" placeholder="Senha (mín. 4 caracteres)">
+          <input type="password" id="confirma-senha" placeholder="Repetir senha">
+          <p id="erro-cadastro" class="erro"></p>
+          <button onclick="criarConta()">✅ Criar Conta</button>
+        </div>
+        
+        <div class="secao-adm">
+          <h3>🚙 Cadastrar Veículo</h3>
+          <input type="text" id="campo-nome" placeholder="Nome / Modelo">
+          <input type="text" id="campo-placa" placeholder="Placa">
+          <input type="text" id="campo-imei" placeholder="IMEI do Rastreador">
+          <input type="text" id="campo-cor" placeholder="Cor / Observação">
+          <input type="text" id="campo-usuario-dono" placeholder="Usuário DONO">
+          <button onclick="salvarVeiculo()">💾 Salvar Veículo</button>
+        </div>
+        
+        <div class="secao-adm">
+          <h3>👤 Usuários Cadastrados</h3>
+          <div id="lista-todos-usuarios"></div>
+        </div>
+        
+        <div class="secao-adm">
+          <h3>🚘 Todos os Veículos</h3>
+          <div id="lista-todos-veiculos"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="codigo.js?v=15.12"></script>
+</body>
+</html>
