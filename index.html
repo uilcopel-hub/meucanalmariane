@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Smart IPTV Player</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="estilo.css">
   <!-- Importando HLS.js para reprodução de streams .m3u8 -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 </head>
@@ -20,7 +20,19 @@
       <div class="home-actions">
         <button class="btn-primary" onclick="entrarNaSecao('canais')">📺 Canais de TV</button>
         <button class="btn-primary" onclick="entrarNaSecao('filmes')">🎬 Filmes e Séries</button>
-        <button class="btn-secondary" onclick="atualizarListasDoGithub()">🔄 Atualizar e Baixar Listas</button>
+        <button class="btn-secondary" onclick="atualizarListasDoGithub()">🔄 Atualizar Listas do GitHub</button>
+      </div>
+
+      <!-- Caixa para Adicionar Múltiplas Listas Personalizadas -->
+      <div class="custom-list-box" style="margin-top: 20px; border-top: 1px solid #3f475e; padding-top: 15px; width: 100%;">
+        <p style="margin-bottom: 8px; font-size: 13px; color: #b0bacc; text-align: left;">Adicionar Várias Listas M3U (uma URL por linha):</p>
+        <textarea id="input-custom-urls" rows="3" placeholder="Cole os links das listas .m3u aqui (um por linha)..." style="width: 100%; padding: 10px; background: #1a1c23; border: 1px solid #4a5568; border-radius: 6px; color: #fff; margin-bottom: 10px; resize: vertical;"></textarea>
+        
+        <div style="display: flex; gap: 10px;">
+          <button class="btn-secondary" onclick="testarMultiplasListas()" style="flex: 1;">🧪 Testar Listas</button>
+          <button class="btn-primary" onclick="adicionarMultiplasListas()" style="flex: 1;">➕ Adicionar Todas</button>
+        </div>
+        <p id="test-status" style="margin-top: 8px; font-size: 12px; color: #00adb5; text-align: left;"></p>
       </div>
       
       <div id="status-carregamento" class="status-msg">Carregando listas salvas...</div>
@@ -29,8 +41,6 @@
 
   <!-- TELA DO PLAYER E LISTAGEM -->
   <div id="player-screen" class="screen" style="display: none;">
-    
-    <!-- Barra Superior -->
     <header class="top-bar">
       <button class="btn-voltar" onclick="voltarParaHome()">⬅ Voltar ao Menu</button>
       <h2 id="titulo-secao-atual">Canais de TV</h2>
@@ -39,25 +49,16 @@
       </div>
     </header>
 
-    <!-- Layout Principal em 3 Colunas -->
     <div class="iptv-layout">
-      
-      <!-- Coluna Esquerda: Categorias -->
       <aside class="sidebar">
         <h3>Categorias</h3>
-        <ul id="categories-list">
-          <!-- Preenchido via JS -->
-        </ul>
+        <ul id="categories-list"></ul>
       </aside>
 
-      <!-- Coluna Central: Grade de Conteúdo (Cards com Imagem) -->
       <main class="content-grid-container">
-        <div id="content-grid" class="content-grid">
-          <!-- Os cards de filmes/canais aparecem aqui -->
-        </div>
+        <div id="content-grid" class="content-grid"></div>
       </main>
 
-      <!-- Coluna Direita: Player de Vídeo -->
       <section class="player-panel">
         <div class="video-wrapper">
           <video id="video-player" controls autoplay></video>
@@ -67,10 +68,9 @@
           <span id="current-group">Categoria: --</span>
         </div>
       </section>
-
     </div>
   </div>
 
-  <script src="script.js"></script>
+  <script src="codigo.js"></script>
 </body>
 </html>
