@@ -3,412 +3,74 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Smart Streaming Player</title>
+  <title>Smart IPTV Player</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Importando HLS.js para reprodução de streams .m3u8 -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-  
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    
-    body {
-      background-color: #0b0f19;
-      color: #fff;
-      font-family: 'Segoe UI', Roboto, sans-serif;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    /* BARRA SUPERIOR (HEADER) */
-    header {
-      height: 60px;
-      background: linear-gradient(90deg, #111827 0%, #1f2937 100%);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 25px;
-      border-bottom: 2px solid #2563eb;
-    }
-
-    .logo {
-      font-size: 1.4rem;
-      font-weight: 800;
-      color: #38bdf8;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .top-menu {
-      display: flex;
-      gap: 15px;
-    }
-
-    .top-menu button {
-      background: transparent;
-      border: none;
-      color: #94a3b8;
-      font-size: 1rem;
-      font-weight: 600;
-      padding: 8px 16px;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
-    .top-menu button.active, .top-menu button:focus, .top-menu button:hover {
-      background-color: #2563eb;
-      color: #fff;
-      outline: none;
-    }
-
-    /* LAYOUT PRINCIPAL */
-    .main-container {
-      flex: 1;
-      display: flex;
-      height: calc(100vh - 60px);
-    }
-
-    /* COLUNA DA ESQUERDA (CATEGORIAS) */
-    .sidebar {
-      width: 25%;
-      min-width: 260px;
-      background-color: #0f172a;
-      border-right: 1px solid #1e293b;
-      display: flex;
-      flex-direction: column;
-      padding: 15px;
-    }
-
-    .sidebar h3 {
-      color: #38bdf8;
-      font-size: 0.85rem;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 12px;
-      padding-left: 5px;
-    }
-
-    .url-input-container {
-      display: flex;
-      gap: 6px;
-      margin-bottom: 15px;
-    }
-
-    .url-input-container input {
-      flex: 1;
-      padding: 8px 10px;
-      border-radius: 4px;
-      border: 1px solid #334155;
-      background-color: #1e293b;
-      color: #fff;
-      font-size: 0.85rem;
-      outline: none;
-    }
-
-    .url-input-container button {
-      padding: 8px 12px;
-      background-color: #2563eb;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    .category-list {
-      flex: 1;
-      overflow-y: auto;
-    }
-
-    .category-item {
-      display: block;
-      width: 100%;
-      text-align: left;
-      padding: 12px 14px;
-      margin-bottom: 6px;
-      background-color: #1e293b;
-      color: #cbd5e1;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 0.9rem;
-      font-weight: 500;
-      border: 2px solid transparent;
-      outline: none;
-    }
-
-    .category-item:focus, .category-item:hover, .category-item.active {
-      background-color: #2563eb;
-      color: #fff;
-      border-color: #60a5fa;
-    }
-
-    /* ÁREA DO CATÁLOGO DE POSTERS / VIDEO */
-    .content-area {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      background-color: #0b0f19;
-      padding: 20px;
-      overflow-y: auto;
-    }
-
-    .section-title {
-      font-size: 1.2rem;
-      margin-bottom: 15px;
-      color: #f8fafc;
-    }
-
-    /* GRID DE POSTERS (ESTILO CATALOGO) */
-    .catalog-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      gap: 15px;
-    }
-
-    .movie-card {
-      background-color: #1e293b;
-      border-radius: 8px;
-      overflow: hidden;
-      cursor: pointer;
-      border: 2px solid transparent;
-      outline: none;
-      transition: transform 0.2s ease, border-color 0.2s ease;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .movie-card:focus, .movie-card:hover {
-      transform: scale(1.05);
-      border-color: #38bdf8;
-      box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-    }
-
-    .movie-card img {
-      width: 100%;
-      height: 200px;
-      object-fit: cover;
-      background-color: #0f172a;
-    }
-
-    .movie-card .title {
-      padding: 8px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      text-align: center;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      color: #e2e8f0;
-    }
-
-    /* CONTAINER DO PLAYER DE VÍDEO */
-    #player-wrapper {
-      display: none;
-      width: 100%;
-      height: 100%;
-      background: #000;
-      border-radius: 8px;
-      overflow: hidden;
-      position: relative;
-    }
-
-    #video-player {
-      width: 100%;
-      height: 100%;
-    }
-
-    .btn-close-player {
-      position: absolute;
-      top: 15px;
-      right: 15px;
-      background: rgba(0,0,0,0.7);
-      color: white;
-      border: 1px solid #fff;
-      padding: 8px 15px;
-      border-radius: 4px;
-      cursor: pointer;
-      z-index: 10;
-      font-weight: bold;
-    }
-
-    /* BARRA INFERIOR DE AJUDA COMANDOS TV */
-    footer {
-      height: 35px;
-      background-color: #020617;
-      border-top: 1px solid #1e293b;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 20px;
-      font-size: 0.8rem;
-      color: #64748b;
-    }
-  </style>
 </head>
 <body>
 
-  <!-- HEADER / TOPO -->
-  <header>
-    <div class="logo">🎬 SMART FLIX</div>
-    <div class="top-menu">
-      <button class="active" tabIndex="1">FILMES</button>
-      <button tabIndex="2">SÉRIES</button>
-      <button tabIndex="3">LANÇAMENTOS</button>
-    </div>
-  </header>
-
-  <!-- CONTAINER CENTRAL -->
-  <div class="main-container">
-    
-    <!-- LATERAL: CATEGORIAS E M3U -->
-    <div class="sidebar">
-      <h3>CATEGORIAS</h3>
+  <!-- TELA INICIAL (Home) -->
+  <div id="home-screen" class="screen">
+    <div class="welcome-container">
+      <div class="logo-box">📺 Smart IPTV Player</div>
+      <h1>Bem-vindo ao seu Centro de Mídia</h1>
+      <p>Gerencie e assista a canais, filmes e séries diretamente das listas públicas.</p>
       
-      <div class="url-input-container">
-        <input type="text" id="m3u-url" placeholder="Cole o link M3U..." />
-        <button onclick="carregarCustom()">OK</button>
+      <div class="home-actions">
+        <button class="btn-primary" onclick="entrarNaSecao('canais')">📺 Canais de TV</button>
+        <button class="btn-primary" onclick="entrarNaSecao('filmes')">🎬 Filmes e Séries</button>
+        <button class="btn-secondary" onclick="atualizarListasDoGithub()">🔄 Atualizar e Baixar Listas</button>
       </div>
-
-      <div class="category-list" id="category-list">
-        <button class="category-item active" onclick="filtrarCategoria('all')">🔥 Filmes Lançamentos 2026</button>
-        <button class="category-item" onclick="filtrarCategoria('2025')">🎬 Filmes Lançamentos 2025</button>
-        <button class="category-item" onclick="filtrarCategoria('4k')">⭐ Filmes | 4K</button>
-        <button class="category-item" onclick="filtrarCategoria('acao')">💥 Filmes | Ação</button>
-      </div>
-    </div>
-
-    <!-- ÁREA DO CATÁLOGO DE CONTEÚDO OU PLAYER -->
-    <div class="content-area">
-      <div id="catalog-header" class="section-title">CATÁLOGO DE FILMES</div>
       
-      <!-- GRADE DE CAPAS -->
-      <div class="catalog-grid" id="catalog-grid"></div>
-
-      <!-- REPRODUTOR DE VÍDEO INTEGRADO -->
-      <div id="player-wrapper">
-        <button class="btn-close-player" onclick="fecharPlayer()">⬅ Voltar ao Catálogo</button>
-        <video id="video-player" controls autoplay></video>
-      </div>
+      <div id="status-carregamento" class="status-msg">Carregando listas salvas...</div>
     </div>
-
   </div>
 
-  <!-- RODAPÉ COM AJUDA PARA CONTROLE DA TV -->
-  <footer>
-    <span>Guia navegação: <b>OK</b> Seleciona</span> | 
-    <span><b>SETAS</b> Navega entre categorias e filmes</span>
-  </footer>
+  <!-- TELA DO PLAYER E LISTAGEM -->
+  <div id="player-screen" class="screen" style="display: none;">
+    
+    <!-- Barra Superior -->
+    <header class="top-bar">
+      <button class="btn-voltar" onclick="voltarParaHome()">⬅ Voltar ao Menu</button>
+      <h2 id="titulo-secao-atual">Canais de TV</h2>
+      <div class="search-box">
+        <input type="text" id="input-busca" placeholder="Pesquisar canal ou filme..." oninput="filtrarCanais()">
+      </div>
+    </header>
 
-  <script>
-    const DEFAULT_URL = "https://iptv-org.github.io/iptv/categories/movies.m3u";
-    const gridEl = document.getElementById("catalog-grid");
-    const playerWrapper = document.getElementById("player-wrapper");
-    const video = document.getElementById("video-player");
-    const urlInput = document.getElementById("m3u-url");
-    let hls = new Hls();
-
-    // Capas genéricas de demonstração para compor o visual igual ao da foto
-    const POSTERS_PADRAO = [
-      "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=300&q=80",
-      "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=300&q=80",
-      "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=300&q=80",
-      "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=300&q=80"
-    ];
-
-    window.onload = () => {
-      const savedUrl = localStorage.getItem("iptv_custom_url") || DEFAULT_URL;
-      urlInput.value = savedUrl;
-      carregarLista(savedUrl);
-    };
-
-    function carregarCustom() {
-      const url = urlInput.value.trim();
-      if (url) {
-        localStorage.setItem("iptv_custom_url", url);
-        carregarLista(url);
-      }
-    }
-
-    async function carregarLista(url) {
-      gridEl.innerHTML = "<div style='color:#38bdf8;'>A carregar o catálogo de filmes...</div>";
+    <!-- Layout Principal em 3 Colunas -->
+    <div class="iptv-layout">
       
-      if (url.includes('.m3u8') || url.includes('.ts')) {
-        reproduzirStream(url);
-        return;
-      }
+      <!-- Coluna Esquerda: Categorias -->
+      <aside class="sidebar">
+        <h3>Categorias</h3>
+        <ul id="categories-list">
+          <!-- Preenchido via JS -->
+        </ul>
+      </aside>
 
-      try {
-        const response = await fetch(url);
-        if (!response.ok) throw new Error();
-        const text = await response.text();
-        const canais = parseM3U(text);
-        renderizarCatalogo(canais);
-      } catch (e) {
-        gridEl.innerHTML = "<div style='color:#ef4444;'>Erro ao carregar a lista. Verifique se o link é válido.</div>";
-      }
-    }
+      <!-- Coluna Central: Grade de Conteúdo (Cards com Imagem) -->
+      <main class="content-grid-container">
+        <div id="content-grid" class="content-grid">
+          <!-- Os cards de filmes/canais aparecem aqui -->
+        </div>
+      </main>
 
-    function parseM3U(text) {
-      const lines = text.split('\n');
-      const items = [];
-      let currentName = "";
+      <!-- Coluna Direita: Player de Vídeo -->
+      <section class="player-panel">
+        <div class="video-wrapper">
+          <video id="video-player" controls autoplay></video>
+        </div>
+        <div class="now-playing-info">
+          <h4 id="current-title">Selecione um canal ou filme</h4>
+          <span id="current-group">Categoria: --</span>
+        </div>
+      </section>
 
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i].trim();
-        if (line.startsWith("#EXTINF:")) {
-          const commaIdx = line.lastIndexOf(',');
-          currentName = commaIdx !== -1 ? line.substring(commaIdx + 1) : "Filme";
-        } else if (line.startsWith("http")) {
-          items.push({ name: currentName, url: line });
-        }
-      }
-      return items;
-    }
+    </div>
+  </div>
 
-    function renderizarCatalogo(lista) {
-      gridEl.innerHTML = "";
-      
-      lista.slice(0, 30).forEach((item, index) => {
-        const posterUrl = POSTERS_PADRAO[index % POSTERS_PADRAO.length];
-        
-        const card = document.createElement("div");
-        card.className = "movie-card";
-        card.tabIndex = index + 10;
-        card.innerHTML = `
-          <img src="${posterUrl}" alt="Poster" />
-          <div class="title">${item.name}</div>
-        `;
-
-        card.onclick = () => reproduzirStream(item.url);
-        card.onkeydown = (e) => { if (e.key === "Enter") reproduzirStream(item.url); };
-
-        gridEl.appendChild(card);
-      });
-    }
-
-    function reproduzirStream(url) {
-      gridEl.style.display = "none";
-      document.getElementById("catalog-header").style.display = "none";
-      playerWrapper.style.display = "block";
-
-      if (Hls.isSupported()) {
-        hls.destroy();
-        hls = new Hls();
-        hls.loadSource(url);
-        hls.attachMedia(video);
-        hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
-      } else {
-        video.src = url;
-        video.play();
-      }
-    }
-
-    function fecharPlayer() {
-      video.pause();
-      playerWrapper.style.display = "none";
-      gridEl.style.display = "grid";
-      document.getElementById("catalog-header").style.display = "block";
-    }
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
