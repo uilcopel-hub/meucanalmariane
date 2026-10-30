@@ -3,229 +3,411 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Meu IPTV Player para TV</title>
+  <title>Smart Streaming Player</title>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    
     body {
-      background-color: #0f172a;
+      background-color: #0b0f19;
       color: #fff;
-      font-family: sans-serif;
-      display: flex;
+      font-family: 'Segoe UI', Roboto, sans-serif;
       height: 100vh;
+      display: flex;
+      flex-direction: column;
       overflow: hidden;
     }
 
-    #sidebar {
-      width: 35%;
-      height: 100%;
-      background-color: #1e293b;
-      padding: 20px;
+    /* BARRA SUPERIOR (HEADER) */
+    header {
+      height: 60px;
+      background: linear-gradient(90deg, #111827 0%, #1f2937 100%);
       display: flex;
-      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 25px;
+      border-bottom: 2px solid #2563eb;
     }
 
-    h2 { margin-bottom: 12px; color: #38bdf8; font-size: 1.3rem; }
-
-    .input-box {
+    .logo {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: #38bdf8;
       display: flex;
+      align-items: center;
       gap: 8px;
+    }
+
+    .top-menu {
+      display: flex;
+      gap: 15px;
+    }
+
+    .top-menu button {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-size: 1rem;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .top-menu button.active, .top-menu button:focus, .top-menu button:hover {
+      background-color: #2563eb;
+      color: #fff;
+      outline: none;
+    }
+
+    /* LAYOUT PRINCIPAL */
+    .main-container {
+      flex: 1;
+      display: flex;
+      height: calc(100vh - 60px);
+    }
+
+    /* COLUNA DA ESQUERDA (CATEGORIAS) */
+    .sidebar {
+      width: 25%;
+      min-width: 260px;
+      background-color: #0f172a;
+      border-right: 1px solid #1e293b;
+      display: flex;
+      flex-direction: column;
+      padding: 15px;
+    }
+
+    .sidebar h3 {
+      color: #38bdf8;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+      padding-left: 5px;
+    }
+
+    .url-input-container {
+      display: flex;
+      gap: 6px;
       margin-bottom: 15px;
     }
 
-    input[type="text"] {
+    .url-input-container input {
       flex: 1;
-      padding: 10px;
-      border-radius: 6px;
-      border: 1px solid #475569;
-      background-color: #0f172a;
+      padding: 8px 10px;
+      border-radius: 4px;
+      border: 1px solid #334155;
+      background-color: #1e293b;
       color: #fff;
-      font-size: 0.95rem;
+      font-size: 0.85rem;
       outline: none;
     }
 
-    input[type="text"]:focus {
-      border-color: #38bdf8;
-    }
-
-    button.btn-load {
-      padding: 10px 15px;
-      background-color: #0284c7;
+    .url-input-container button {
+      padding: 8px 12px;
+      background-color: #2563eb;
       color: white;
       border: none;
-      border-radius: 6px;
+      border-radius: 4px;
       cursor: pointer;
       font-weight: bold;
-      outline: none;
     }
 
-    button.btn-load:hover {
-      background-color: #0369a1;
-    }
-
-    #channel-list {
+    .category-list {
       flex: 1;
       overflow-y: auto;
-      padding-right: 5px;
     }
 
-    .channel-item {
+    .category-item {
       display: block;
       width: 100%;
       text-align: left;
-      padding: 12px 15px;
-      margin-bottom: 8px;
-      background-color: #334155;
-      color: #fff;
-      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 6px;
+      background-color: #1e293b;
+      color: #cbd5e1;
+      border-radius: 6px;
       cursor: pointer;
-      font-size: 1rem;
+      font-size: 0.9rem;
+      font-weight: 500;
       border: 2px solid transparent;
       outline: none;
     }
 
-    .channel-item:focus, .channel-item:hover {
-      background-color: #0284c7;
-      border-color: #38bdf8;
+    .category-item:focus, .category-item:hover, .category-item.active {
+      background-color: #2563eb;
+      color: #fff;
+      border-color: #60a5fa;
     }
 
-    #player-container {
-      width: 65%;
-      height: 100%;
+    /* ÁREA DO CATÁLOGO DE POSTERS / VIDEO */
+    .content-area {
+      flex: 1;
       display: flex;
-      justify-content: center;
-      align-items: center;
-      background-color: #000;
+      flex-direction: column;
+      background-color: #0b0f19;
+      padding: 20px;
+      overflow-y: auto;
     }
 
-    video {
+    .section-title {
+      font-size: 1.2rem;
+      margin-bottom: 15px;
+      color: #f8fafc;
+    }
+
+    /* GRID DE POSTERS (ESTILO CATALOGO) */
+    .catalog-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 15px;
+    }
+
+    .movie-card {
+      background-color: #1e293b;
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: pointer;
+      border: 2px solid transparent;
+      outline: none;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .movie-card:focus, .movie-card:hover {
+      transform: scale(1.05);
+      border-color: #38bdf8;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+    }
+
+    .movie-card img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      background-color: #0f172a;
+    }
+
+    .movie-card .title {
+      padding: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #e2e8f0;
+    }
+
+    /* CONTAINER DO PLAYER DE VÍDEO */
+    #player-wrapper {
+      display: none;
       width: 100%;
       height: 100%;
-      max-height: 100vh;
+      background: #000;
+      border-radius: 8px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    #video-player {
+      width: 100%;
+      height: 100%;
+    }
+
+    .btn-close-player {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      border: 1px solid #fff;
+      padding: 8px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      z-index: 10;
+      font-weight: bold;
+    }
+
+    /* BARRA INFERIOR DE AJUDA COMANDOS TV */
+    footer {
+      height: 35px;
+      background-color: #020617;
+      border-top: 1px solid #1e293b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      font-size: 0.8rem;
+      color: #64748b;
     }
   </style>
 </head>
 <body>
 
-  <div id="sidebar">
-    <h2>📺 IPTV Player</h2>
+  <!-- HEADER / TOPO -->
+  <header>
+    <div class="logo">🎬 SMART FLIX</div>
+    <div class="top-menu">
+      <button class="active" tabIndex="1">FILMES</button>
+      <button tabIndex="2">SÉRIES</button>
+      <button tabIndex="3">LANÇAMENTOS</button>
+    </div>
+  </header>
+
+  <!-- CONTAINER CENTRAL -->
+  <div class="main-container">
     
-    <div class="input-box">
-      <input type="text" id="m3u-url" placeholder="Cole o link M3U ou .m3u8 aqui..." />
-      <button class="btn-load" onclick="customLoad()">Carregar</button>
+    <!-- LATERAL: CATEGORIAS E M3U -->
+    <div class="sidebar">
+      <h3>CATEGORIAS</h3>
+      
+      <div class="url-input-container">
+        <input type="text" id="m3u-url" placeholder="Cole o link M3U..." />
+        <button onclick="carregarCustom()">OK</button>
+      </div>
+
+      <div class="category-list" id="category-list">
+        <button class="category-item active" onclick="filtrarCategoria('all')">🔥 Filmes Lançamentos 2026</button>
+        <button class="category-item" onclick="filtrarCategoria('2025')">🎬 Filmes Lançamentos 2025</button>
+        <button class="category-item" onclick="filtrarCategoria('4k')">⭐ Filmes | 4K</button>
+        <button class="category-item" onclick="filtrarCategoria('acao')">💥 Filmes | Ação</button>
+      </div>
     </div>
 
-    <div id="channel-list">Cole um link de lista M3U ou um link direto de canal (.m3u8 / .ts) acima.</div>
+    <!-- ÁREA DO CATÁLOGO DE CONTEÚDO OU PLAYER -->
+    <div class="content-area">
+      <div id="catalog-header" class="section-title">CATÁLOGO DE FILMES</div>
+      
+      <!-- GRADE DE CAPAS -->
+      <div class="catalog-grid" id="catalog-grid"></div>
+
+      <!-- REPRODUTOR DE VÍDEO INTEGRADO -->
+      <div id="player-wrapper">
+        <button class="btn-close-player" onclick="fecharPlayer()">⬅ Voltar ao Catálogo</button>
+        <video id="video-player" controls autoplay></video>
+      </div>
+    </div>
+
   </div>
 
-  <div id="player-container">
-    <video id="video-player" controls autoplay></video>
-  </div>
+  <!-- RODAPÉ COM AJUDA PARA CONTROLE DA TV -->
+  <footer>
+    <span>Guia navegação: <b>OK</b> Seleciona</span> | 
+    <span><b>SETAS</b> Navega entre categorias e filmes</span>
+  </footer>
 
   <script>
-    const DEFAULT_URL = "https://iptv-org.github.io/iptv/languages/por.m3u";
-    
-    const urlInput = document.getElementById("m3u-url");
-    const channelListEl = document.getElementById("channel-list");
+    const DEFAULT_URL = "https://iptv-org.github.io/iptv/categories/movies.m3u";
+    const gridEl = document.getElementById("catalog-grid");
+    const playerWrapper = document.getElementById("player-wrapper");
     const video = document.getElementById("video-player");
+    const urlInput = document.getElementById("m3u-url");
     let hls = new Hls();
+
+    // Capas genéricas de demonstração para compor o visual igual ao da foto
+    const POSTERS_PADRAO = [
+      "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=300&q=80",
+      "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=300&q=80",
+      "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=300&q=80",
+      "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=300&q=80"
+    ];
 
     window.onload = () => {
       const savedUrl = localStorage.getItem("iptv_custom_url") || DEFAULT_URL;
       urlInput.value = savedUrl;
-      processarUrl(savedUrl);
+      carregarLista(savedUrl);
     };
 
-    function customLoad() {
+    function carregarCustom() {
       const url = urlInput.value.trim();
       if (url) {
         localStorage.setItem("iptv_custom_url", url);
-        processarUrl(url);
-      } else {
-        alert("Por favor, cole um link válido!");
+        carregarLista(url);
       }
     }
 
-    urlInput.addEventListener("keyup", (event) => {
-      if (event.key === "Enter") {
-        customLoad();
+    async function carregarLista(url) {
+      gridEl.innerHTML = "<div style='color:#38bdf8;'>A carregar o catálogo de filmes...</div>";
+      
+      if (url.includes('.m3u8') || url.includes('.ts')) {
+        reproduzirStream(url);
+        return;
       }
-    });
 
-    function processarUrl(url) {
-      // Se for um link direto de stream (.m3u8, .ts ou porta de stream)
-      if (url.includes('.m3u8') || url.includes('.ts') || url.includes(':8000/') || url.includes('/live/')) {
-        channelListEl.innerHTML = `<div class="channel-item" style="background-color: #0284c7;">▶️ Reproduzindo Stream Direto</div>`;
-        playStream(url);
-      } else {
-        // Caso contrário, tenta baixar como lista M3U
-        fetchAndParseM3U(url);
-      }
-    }
-
-    async function fetchAndParseM3U(url) {
-      channelListEl.innerText = "Carregando lista de canais...";
       try {
         const response = await fetch(url);
-        if (!response.ok) throw new Error("Erro ao aceder à URL.");
+        if (!response.ok) throw new Error();
         const text = await response.text();
-        const channels = parseM3U(text);
-        
-        if (channels.length === 0) {
-          channelListEl.innerText = "Nenhum canal encontrado.";
-          return;
-        }
-
-        renderChannels(channels);
-      } catch (err) {
-        channelListEl.innerText = "Erro ao carregar a lista (Bloqueio CORS do navegador). Tente usar um link direto de canal (.m3u8).";
+        const canais = parseM3U(text);
+        renderizarCatalogo(canais);
+      } catch (e) {
+        gridEl.innerHTML = "<div style='color:#ef4444;'>Erro ao carregar a lista. Verifique se o link é válido.</div>";
       }
     }
 
-    function parseM3U(m3uText) {
-      const lines = m3uText.split('\n');
-      const channels = [];
+    function parseM3U(text) {
+      const lines = text.split('\n');
+      const items = [];
       let currentName = "";
 
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i].trim();
         if (line.startsWith("#EXTINF:")) {
-          const commaIndex = line.lastIndexOf(',');
-          currentName = commaIndex !== -1 ? line.substring(commaIndex + 1) : "Canal";
+          const commaIdx = line.lastIndexOf(',');
+          currentName = commaIdx !== -1 ? line.substring(commaIdx + 1) : "Filme";
         } else if (line.startsWith("http")) {
-          channels.push({ name: currentName, url: line });
+          items.push({ name: currentName, url: line });
         }
       }
-      return channels;
+      return items;
     }
 
-    function renderChannels(channels) {
-      channelListEl.innerHTML = "";
-      channels.forEach((ch, index) => {
-        const btn = document.createElement("button");
-        btn.className = "channel-item";
-        btn.innerText = ch.name;
-        btn.tabIndex = index + 2;
-        btn.onclick = () => playStream(ch.url);
-        channelListEl.appendChild(btn);
+    function renderizarCatalogo(lista) {
+      gridEl.innerHTML = "";
+      
+      lista.slice(0, 30).forEach((item, index) => {
+        const posterUrl = POSTERS_PADRAO[index % POSTERS_PADRAO.length];
+        
+        const card = document.createElement("div");
+        card.className = "movie-card";
+        card.tabIndex = index + 10;
+        card.innerHTML = `
+          <img src="${posterUrl}" alt="Poster" />
+          <div class="title">${item.name}</div>
+        `;
+
+        card.onclick = () => reproduzirStream(item.url);
+        card.onkeydown = (e) => { if (e.key === "Enter") reproduzirStream(item.url); };
+
+        gridEl.appendChild(card);
       });
     }
 
-    function playStream(url) {
+    function reproduzirStream(url) {
+      gridEl.style.display = "none";
+      document.getElementById("catalog-header").style.display = "none";
+      playerWrapper.style.display = "block";
+
       if (Hls.isSupported()) {
         hls.destroy();
         hls = new Hls();
         hls.loadSource(url);
         hls.attachMedia(video);
         hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
-      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = url;
-        video.play();
       } else {
         video.src = url;
         video.play();
       }
+    }
+
+    function fecharPlayer() {
+      video.pause();
+      playerWrapper.style.display = "none";
+      gridEl.style.display = "grid";
+      document.getElementById("catalog-header").style.display = "block";
     }
   </script>
 </body>
