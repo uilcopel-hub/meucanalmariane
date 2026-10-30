@@ -29,12 +29,13 @@ body {
   background: linear-gradient(135deg, #1a1c23 0%, #252836 100%);
   text-align: center;
   padding: 20px;
+  overflow-y: auto;
 }
 
 .welcome-container {
   width: 100%;
-  max-width: 550px;
-  padding: 40px 30px;
+  max-width: 580px;
+  padding: 30px;
   background: #232733;
   border-radius: 16px;
   box-shadow: 0 15px 35px rgba(0,0,0,0.7);
@@ -59,7 +60,7 @@ body {
 
 .welcome-container p {
   color: #b0bacc;
-  margin-bottom: 25px;
+  margin-bottom: 20px;
   font-size: 14px;
   line-height: 1.4;
 }
@@ -69,7 +70,6 @@ body {
   flex-direction: column;
   gap: 12px;
   width: 100%;
-  max-width: 350px;
 }
 
 .btn-primary, .btn-secondary {
@@ -103,7 +103,7 @@ body {
 }
 
 .status-msg {
-  margin-top: 20px;
+  margin-top: 15px;
   font-size: 13px;
   color: #00adb5;
   font-weight: 500;
