@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Meu IPTV Player para TV</title>
-  <!-- Biblioteca para reproduzir vídeos .m3u8 -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   
   <style>
@@ -18,7 +17,6 @@
       overflow: hidden;
     }
 
-    /* Menu Lateral de Canais */
     #sidebar {
       width: 35%;
       height: 100%;
@@ -30,7 +28,6 @@
 
     h2 { margin-bottom: 12px; color: #38bdf8; font-size: 1.3rem; }
 
-    /* Área de Inserção de Link */
     .input-box {
       display: flex;
       gap: 8px;
@@ -63,11 +60,10 @@
       outline: none;
     }
 
-    button.btn-load:hover, button.btn-load:focus {
+    button.btn-load:hover {
       background-color: #0369a1;
     }
 
-    /* Lista com Scroll */
     #channel-list {
       flex: 1;
       overflow-y: auto;
@@ -89,13 +85,11 @@
       outline: none;
     }
 
-    /* Estilo de Destaque para Seleção via Controle Remoto ou Mouse */
     .channel-item:focus, .channel-item:hover {
       background-color: #0284c7;
       border-color: #38bdf8;
     }
 
-    /* Área do Player de Vídeo */
     #player-container {
       width: 65%;
       height: 100%;
@@ -114,20 +108,17 @@
 </head>
 <body>
 
-  <!-- Sidebar com Input + Lista -->
   <div id="sidebar">
-    <h2>📺 Lista de Canais</h2>
+    <h2>📺 IPTV Player</h2>
     
-    <!-- Formulário para colar o Link M3U ou link direto -->
     <div class="input-box">
-      <input type="text" id="m3u-url" placeholder="Cole o link M3U ou stream direto..." />
-      <button class="btn-load" id="btn-carregar" onclick="customLoad()">Carregar</button>
+      <input type="text" id="m3u-url" placeholder="Cole o link M3U ou .m3u8 aqui..." />
+      <button class="btn-load" onclick="customLoad()">Carregar</button>
     </div>
 
-    <div id="channel-list">Informe um link acima e clique em carregar.</div>
+    <div id="channel-list">Cole um link de lista M3U ou um link direto de canal (.m3u8 / .ts) acima.</div>
   </div>
 
-  <!-- Player de Vídeo -->
   <div id="player-container">
     <video id="video-player" controls autoplay></video>
   </div>
@@ -143,14 +134,14 @@
     window.onload = () => {
       const savedUrl = localStorage.getItem("iptv_custom_url") || DEFAULT_URL;
       urlInput.value = savedUrl;
-      processInput(savedUrl, false);
+      processarUrl(savedUrl);
     };
 
     function customLoad() {
       const url = urlInput.value.trim();
       if (url) {
         localStorage.setItem("iptv_custom_url", url);
-        processInput(url, true);
+        processarUrl(url);
       } else {
         alert("Por favor, cole um link válido!");
       }
@@ -162,15 +153,13 @@
       }
     });
 
-    function processInput(url, playDirectly) {
-      // Se for um link direto de stream (terminado em .ts, .m3u8, ou contendo porta de IPTV)
-      if (url.endsWith('.ts') || url.includes(':25461/') || url.includes('/live/')) {
-        channelListEl.innerHTML = `<div class="channel-item" style="background-color: #0284c7;">🎥 Stream Direto Carregado</div>`;
-        if (playDirectly) {
-          playStream(url);
-        }
+    function processarUrl(url) {
+      // Se for um link direto de stream (.m3u8, .ts ou porta de stream)
+      if (url.includes('.m3u8') || url.includes('.ts') || url.includes(':8000/') || url.includes('/live/')) {
+        channelListEl.innerHTML = `<div class="channel-item" style="background-color: #0284c7;">▶️ Reproduzindo Stream Direto</div>`;
+        playStream(url);
       } else {
-        // Caso contrário, trata como uma lista M3U normal
+        // Caso contrário, tenta baixar como lista M3U
         fetchAndParseM3U(url);
       }
     }
@@ -179,18 +168,18 @@
       channelListEl.innerText = "Carregando lista de canais...";
       try {
         const response = await fetch(url);
-        if (!response.ok) throw new Error("Não foi possível acessar a URL.");
+        if (!response.ok) throw new Error("Erro ao aceder à URL.");
         const text = await response.text();
         const channels = parseM3U(text);
         
         if (channels.length === 0) {
-          channelListEl.innerText = "Nenhum canal encontrado nessa lista.";
+          channelListEl.innerText = "Nenhum canal encontrado.";
           return;
         }
 
         renderChannels(channels);
       } catch (err) {
-        channelListEl.innerText = "Erro ao carregar a lista. Nota: Links HTTP diretos ou protegidos por servidores externos podem ser bloqueados pelo navegador devido a restrições de segurança (CORS).";
+        channelListEl.innerText = "Erro ao carregar a lista (Bloqueio CORS do navegador). Tente usar um link direto de canal (.m3u8).";
       }
     }
 
@@ -203,7 +192,7 @@
         const line = lines[i].trim();
         if (line.startsWith("#EXTINF:")) {
           const commaIndex = line.lastIndexOf(',');
-          currentName = commaIndex !== -1 ? line.substring(commaIndex + 1) : "Canal sem nome";
+          currentName = commaIndex !== -1 ? line.substring(commaIndex + 1) : "Canal";
         } else if (line.startsWith("http")) {
           channels.push({ name: currentName, url: line });
         }
@@ -213,18 +202,12 @@
 
     function renderChannels(channels) {
       channelListEl.innerHTML = "";
-      
       channels.forEach((ch, index) => {
         const btn = document.createElement("button");
         btn.className = "channel-item";
         btn.innerText = ch.name;
         btn.tabIndex = index + 2;
-
         btn.onclick = () => playStream(ch.url);
-        btn.onkeydown = (e) => {
-          if (e.key === "Enter") playStream(ch.url);
-        };
-
         channelListEl.appendChild(btn);
       });
     }
