@@ -1,79 +1,35 @@
-/* --- Ajustes para um tema mais claro e visível --- */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
 
 body {
-  background-color: #1a1c23; /* Fundo geral um pouco mais claro */
-  color: #e0e6ed;            /* Texto principal em branco claro/cinza claro */
+  background-color: #1a1c23; /* Fundo geral claro e agradável */
+  color: #e0e6ed;            /* Texto bem visível */
+  height: 100vh;
+  overflow: hidden;
 }
 
-/* Tela Inicial mais destacada */
+.screen {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- TELA INICIAL --- */
+#home-screen {
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #1a1c23 0%, #252836 100%);
+  text-align: center;
+}
+
 .welcome-container {
-  background: #232733;       /* Fundo do painel central mais claro */
-  border: 1px solid #3f475e;  /* Borda mais visível */
-  box-shadow: 0 10px 30px rgba(0,0,0,0.7);
-}
-
-.welcome-container p {
-  color: #b0bacc;            /* Texto descritivo mais legível */
-}
-
-/* Barra Superior */
-.top-bar {
-  background: #232733;
-  border-bottom: 1px solid #3f475e;
-}
-
-.search-box input {
-  background: #1a1c23;
-  border: 1px solid #4a5568;
-  color: #fff;
-}
-
-.search-box input::placeholder {
-  color: #8fa2b8;            /* Deixa o texto de ajuda da busca bem visível */
-}
-
-/* Sidebar de Categorias */
-.sidebar {
-  background: #1e222d;
-  border-right: 1px solid #3f475e;
-}
-
-.sidebar li {
-  color: #d2d8e2;            /* Nome das categorias mais claro */
-}
-
-.sidebar li:hover, .sidebar li.active {
-  background: #00adb5;
-  color: #fff;
-  font-weight: bold;
-}
-
-/* Grade Central de Conteúdo */
-.content-grid-container {
-  background: #151821;
-}
-
-.media-card {
-  background: #232733;       /* Fundo do card do filme/canal */
-  border: 1px solid #3f475e;
-}
-
-.media-card p {
-  color: #f0f4f8;            /* Nome do filme/canal bem claro */
-  font-weight: 500;
-}
-
-/* Painel do Player */
-.player-panel {
-  background: #1e222d;
-  border-left: 1px solid #3f475e;
-}
-
-.now-playing-info h4 {
-  color: #fff;
-}
-
-.now-playing-info span {
-  color: #00adb5;            /* Destaca a categoria do vídeo que está a passar */
-  font-weight: bold;
-}
+  max-width: 600px;
+  padding: 40px;
+  background: #232733;       /* Caixa central destacada */
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0
