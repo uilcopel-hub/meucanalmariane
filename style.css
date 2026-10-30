@@ -6,8 +6,8 @@
 }
 
 body {
-  background-color: #1a1c23; /* Fundo geral claro e agradável */
-  color: #e0e6ed;            /* Texto bem visível */
+  background-color: #1a1c23;
+  color: #e0e6ed;
   height: 100vh;
   overflow: hidden;
 }
@@ -21,54 +21,67 @@ body {
 
 /* --- TELA INICIAL --- */
 #home-screen {
+  display: flex;
   justify-content: center;
   align-items: center;
+  width: 100vw;
+  height: 100vh;
   background: linear-gradient(135deg, #1a1c23 0%, #252836 100%);
   text-align: center;
+  padding: 20px;
 }
 
 .welcome-container {
-  max-width: 600px;
-  padding: 40px;
-  background: #232733;       /* Caixa central destacada */
+  width: 100%;
+  max-width: 550px;
+  padding: 40px 30px;
+  background: #232733;
   border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+  box-shadow: 0 15px 35px rgba(0,0,0,0.7);
   border: 1px solid #3f475e;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .logo-box {
-  font-size: 28px;
+  font-size: 26px;
   font-weight: bold;
   color: #00adb5;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
 }
 
 .welcome-container h1 {
-  font-size: 24px;
+  font-size: 22px;
   margin-bottom: 10px;
   color: #ffffff;
 }
 
 .welcome-container p {
-  color: #b0bacc;            /* Texto descritivo claro */
-  margin-bottom: 30px;
+  color: #b0bacc;
+  margin-bottom: 25px;
   font-size: 14px;
+  line-height: 1.4;
 }
 
 .home-actions {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 12px;
+  width: 100%;
+  max-width: 350px;
 }
 
 .btn-primary, .btn-secondary {
-  padding: 14px;
+  width: 100%;
+  padding: 12px 20px;
   border: none;
   border-radius: 8px;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: bold;
   cursor: pointer;
   transition: all 0.2s;
+  text-align: center;
 }
 
 .btn-primary {
