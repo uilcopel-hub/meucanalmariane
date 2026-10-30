@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Meu IPTV Player para TV</title>
   <!-- Biblioteca para reproduzir vídeos .m3u8 -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
@@ -117,13 +118,13 @@
   <div id="sidebar">
     <h2>📺 Lista de Canais</h2>
     
-    <!-- Formulário para colar o Link M3U -->
+    <!-- Formulário para colar o Link M3U ou link direto -->
     <div class="input-box">
-      <input type="text" id="m3u-url" placeholder="Cole o link M3U aqui..." />
+      <input type="text" id="m3u-url" placeholder="Cole o link M3U ou stream direto..." />
       <button class="btn-load" id="btn-carregar" onclick="customLoad()">Carregar</button>
     </div>
 
-    <div id="channel-list">Informe um link M3U acima e clique em carregar.</div>
+    <div id="channel-list">Informe um link acima e clique em carregar.</div>
   </div>
 
   <!-- Player de Vídeo -->
@@ -132,7 +133,6 @@
   </div>
 
   <script>
-    // URL Padrão caso o usuário não tenha salvo nenhuma
     const DEFAULT_URL = "https://iptv-org.github.io/iptv/languages/por.m3u";
     
     const urlInput = document.getElementById("m3u-url");
@@ -140,32 +140,41 @@
     const video = document.getElementById("video-player");
     let hls = new Hls();
 
-    // Carrega a URL salva no navegador ou a padrão ao abrir
     window.onload = () => {
       const savedUrl = localStorage.getItem("iptv_custom_url") || DEFAULT_URL;
       urlInput.value = savedUrl;
-      fetchAndParseM3U(savedUrl);
+      processInput(savedUrl, false);
     };
 
-    // Função disparada ao clicar no botão Carregar
     function customLoad() {
       const url = urlInput.value.trim();
       if (url) {
-        localStorage.setItem("iptv_custom_url", url); // Salva no cache do navegador
-        fetchAndParseM3U(url);
+        localStorage.setItem("iptv_custom_url", url);
+        processInput(url, true);
       } else {
-        alert("Por favor, cole um link M3U válido!");
+        alert("Por favor, cole um link válido!");
       }
     }
 
-    // Permite apertar Enter no campo de texto para carregar
     urlInput.addEventListener("keyup", (event) => {
       if (event.key === "Enter") {
         customLoad();
       }
     });
 
-    // Faz o download e parse da lista M3U
+    function processInput(url, playDirectly) {
+      // Se for um link direto de stream (terminado em .ts, .m3u8, ou contendo porta de IPTV)
+      if (url.endsWith('.ts') || url.includes(':25461/') || url.includes('/live/')) {
+        channelListEl.innerHTML = `<div class="channel-item" style="background-color: #0284c7;">🎥 Stream Direto Carregado</div>`;
+        if (playDirectly) {
+          playStream(url);
+        }
+      } else {
+        // Caso contrário, trata como uma lista M3U normal
+        fetchAndParseM3U(url);
+      }
+    }
+
     async function fetchAndParseM3U(url) {
       channelListEl.innerText = "Carregando lista de canais...";
       try {
@@ -181,11 +190,10 @@
 
         renderChannels(channels);
       } catch (err) {
-        channelListEl.innerText = "Erro ao carregar a lista. Verifique se o link está correto e permite acesso externo (CORS).";
+        channelListEl.innerText = "Erro ao carregar a lista. Nota: Links HTTP diretos ou protegidos por servidores externos podem ser bloqueados pelo navegador devido a restrições de segurança (CORS).";
       }
     }
 
-    // Extrai Nomes e Links .m3u8 do texto do arquivo .m3u
     function parseM3U(m3uText) {
       const lines = m3uText.split('\n');
       const channels = [];
@@ -203,7 +211,6 @@
       return channels;
     }
 
-    // Renderiza os botões na tela
     function renderChannels(channels) {
       channelListEl.innerHTML = "";
       
@@ -211,10 +218,9 @@
         const btn = document.createElement("button");
         btn.className = "channel-item";
         btn.innerText = ch.name;
-        btn.tabIndex = index + 2; // Mantém navegação fluida via teclado/D-Pad
+        btn.tabIndex = index + 2;
 
         btn.onclick = () => playStream(ch.url);
-        
         btn.onkeydown = (e) => {
           if (e.key === "Enter") playStream(ch.url);
         };
@@ -223,15 +229,17 @@
       });
     }
 
-    // Executa o vídeo usando HLS.js
     function playStream(url) {
       if (Hls.isSupported()) {
-        hls.destroy(); // Reseta player anterior
+        hls.destroy();
         hls = new Hls();
         hls.loadSource(url);
         hls.attachMedia(video);
         hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
       } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = url;
+        video.play();
+      } else {
         video.src = url;
         video.play();
       }
