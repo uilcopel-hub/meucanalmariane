@@ -23,19 +23,22 @@
         <button class="btn-secondary" onclick="atualizarListasDoGithub()">🔄 Atualizar Listas do GitHub</button>
       </div>
 
-      <!-- Caixa para Adicionar Múltiplas Listas Personalizadas -->
+      <!-- Caixa para Adicionar Múltiplas Listas ou Links Diretos -->
       <div class="custom-list-box" style="margin-top: 20px; border-top: 1px solid #3f475e; padding-top: 15px; width: 100%;">
-        <p style="margin-bottom: 8px; font-size: 13px; color: #b0bacc; text-align: left;">Adicionar Várias Listas M3U (uma URL por linha):</p>
-        <textarea id="input-custom-urls" rows="3" placeholder="Cole os links das listas .m3u aqui (um por linha)..." style="width: 100%; padding: 10px; background: #1a1c23; border: 1px solid #4a5568; border-radius: 6px; color: #fff; margin-bottom: 10px; resize: vertical;"></textarea>
+        <p style="margin-bottom: 8px; font-size: 13px; color: #b0bacc; text-align: left;">Adicionar Listas ou Links Diretos (um por linha):</p>
+        <textarea id="input-custom-urls" rows="3" placeholder="Cole os links .m3u ou links diretos de stream aqui..." style="width: 100%; padding: 10px; background: #1a1c23; border: 1px solid #4a5568; border-radius: 6px; color: #fff; margin-bottom: 10px; resize: vertical;"></textarea>
         
         <div style="display: flex; gap: 10px;">
-          <button class="btn-secondary" onclick="testarMultiplasListas()" style="flex: 1;">🧪 Testar Listas</button>
-          <button class="btn-primary" onclick="adicionarMultiplasListas()" style="flex: 1;">➕ Adicionar Todas</button>
+          <button class="btn-secondary" onclick="testarMultiplasListas()" style="flex: 1;">🧪 Testar Links</button>
+          <button class="btn-primary" onclick="adicionarMultiplasListas()" style="flex: 1;">➕ Adicionar Todos</button>
         </div>
         <p id="test-status" style="margin-top: 8px; font-size: 12px; color: #00adb5; text-align: left;"></p>
       </div>
       
       <div id="status-carregamento" class="status-msg">Carregando listas salvas...</div>
+      
+      <!-- Indicador de Versão -->
+      <div id="app-version" style="margin-top: 15px; font-size: 11px; color: #64748b;">Versão 1.2</div>
     </div>
   </div>
 
@@ -44,8 +47,11 @@
     <header class="top-bar">
       <button class="btn-voltar" onclick="voltarParaHome()">⬅ Voltar ao Menu</button>
       <h2 id="titulo-secao-atual">Canais de TV</h2>
-      <div class="search-box">
-        <input type="text" id="input-busca" placeholder="Pesquisar canal ou filme..." oninput="filtrarCanais()">
+      <div style="display: flex; align-items: center; gap: 15px;">
+        <span id="player-version-tag" style="font-size: 11px; color: #64748b; background: #1a1c23; padding: 4px 8px; border-radius: 4px; border: 1px solid #3f475e;">v1.2</span>
+        <div class="search-box">
+          <input type="text" id="input-busca" placeholder="Pesquisar canal ou filme..." oninput="filtrarCanais()">
+        </div>
       </div>
     </header>
 
