@@ -74,7 +74,7 @@ async function atualizarListasDoGithub() {
   }
 }
 
-// Testar múltiplas listas personalizadas
+// Testar múltiplas listas ou links diretos
 async function testarMultiplasListas() {
   const textoInput = document.getElementById('input-custom-urls').value.trim();
   const statusEl = document.getElementById('test-status');
@@ -86,7 +86,7 @@ async function testarMultiplasListas() {
   }
 
   const urls = textoInput.split('\n').map(u => u.trim()).filter(u => u.length > 0);
-  statusEl.innerText = `Testando ${urls.length} lista(s)...`;
+  statusEl.innerText = `Testando ${urls.length} link(s)...`;
   statusEl.style.color = '#00adb5';
 
   let totalCanaisGeral = 0;
@@ -94,37 +94,49 @@ async function testarMultiplasListas() {
 
   for (const url of urls) {
     try {
-      const response = await fetch(url);
+      const response = await fetch(url, { method: 'HEAD' }).catch(() => fetch(url));
       if (response.ok) {
-        const texto = await response.text();
-        if (texto.includes('#EXTM3U') || texto.includes('#EXTINF')) {
-          const mapTemp = new Map();
-          parseM3U(texto, mapTemp);
-          totalCanaisGeral += mapTemp.size;
-          linksValidos++;
+        const mapTemp = new Map();
+        if (url.endsWith('.m3u') || url.endsWith('.m3u8')) {
+          try {
+            const resGet = await fetch(url);
+            const texto = await resGet.text();
+            parseM3U(texto, mapTemp, url);
+          } catch (e) {
+            adicionarLinkDireto(url, mapTemp);
+          }
+        } else {
+          adicionarLinkDireto(url, mapTemp);
         }
+
+        totalCanaisGeral += mapTemp.size;
+        linksValidos++;
       }
     } catch (e) {
-      console.warn(`Erro ao testar a URL: ${url}`, e);
+      // Mesmo com bloqueio de CORS no teste, conta como link direto tentando aceitá-lo
+      const mapTemp = new Map();
+      adicionarLinkDireto(url, mapTemp);
+      totalCanaisGeral += mapTemp.size;
+      linksValidos++;
     }
   }
 
-  statusEl.innerText = `Teste concluído: ${linksValidos}/${urls.length} válidas (${totalCanaisGeral} canais).`;
+  statusEl.innerText = `Teste concluído: ${linksValidos}/${urls.length} válidos (${totalCanaisGeral} canais/streams encontrados).`;
   statusEl.style.color = '#51cf66';
 }
 
-// Adicionar múltiplas listas personalizadas
+// Adicionar múltiplas listas ou links diretos
 async function adicionarMultiplasListas() {
   const textoInput = document.getElementById('input-custom-urls').value.trim();
   const statusEl = document.getElementById('test-status');
 
   if (!textoInput) {
-    alert('Insira pelo menos uma URL de lista M3U.');
+    alert('Insira pelo menos uma URL.');
     return;
   }
 
   const urls = textoInput.split('\n').map(u => u.trim()).filter(u => u.length > 0);
-  statusEl.innerText = `Baixando ${urls.length} lista(s)...`;
+  statusEl.innerText = `Processando ${urls.length} link(s)...`;
 
   try {
     const mapUnicos = new Map();
@@ -132,25 +144,33 @@ async function adicionarMultiplasListas() {
       if (item.url) mapUnicos.set(item.url, item);
     });
 
-    let listasBaixadas = 0;
+    let linksAdicionados = 0;
 
     for (const url of urls) {
       try {
         const response = await fetch(url);
         if (response.ok) {
           const texto = await response.text();
-          parseM3U(texto, mapUnicos);
-          listasBaixadas++;
+          if (texto.includes('#EXTM3U') || texto.includes('#EXTINF')) {
+            parseM3U(texto, mapUnicos);
+          } else {
+            adicionarLinkDireto(url, mapUnicos);
+          }
+        } else {
+          adicionarLinkDireto(url, mapUnicos);
         }
+        linksAdicionados++;
       } catch (err) {
-        console.warn(`Falha ao carregar a lista: ${url}`, err);
+        // Se houver restrição de CORS ao tentar fazer o fetch do ficheiro, salva como stream direto
+        adicionarLinkDireto(url, mapUnicos);
+        linksAdicionados++;
       }
     }
 
     listaGlobalCanais = Array.from(mapUnicos.values());
     localStorage.setItem('iptv_cache_dados', JSON.stringify(listaGlobalCanais));
 
-    statusEl.innerText = `Sucesso! ${listasBaixadas} lista(s) adicionada(s). Total: ${listaGlobalCanais.length}`;
+    statusEl.innerText = `Sucesso! ${linksAdicionados} link(s) processado(s). Total: ${listaGlobalCanais.length}`;
     statusEl.style.color = '#51cf66';
     
     alert(`Processo concluído! Total acumulado de ${listaGlobalCanais.length} itens.`);
@@ -158,20 +178,46 @@ async function adicionarMultiplasListas() {
 
   } catch (err) {
     console.error(err);
-    statusEl.innerText = 'Erro ao carregar as listas.';
+    statusEl.innerText = 'Erro ao carregar os links.';
     statusEl.style.color = '#ff6b6b';
   }
 }
 
+// Cria um canal individual a partir de um link direto
+function adicionarLinkDireto(url, mapDestino) {
+  if (!url || mapDestino.has(url)) return;
+
+  // Extrai um nome amigável a partir do URL
+  let nomeCanal = 'Canal Personalizado';
+  try {
+    const partes = url.split('/');
+    const ultimaParte = partes[partes.length - 1] || partes[partes.length - 2];
+    if (ultimaParte) {
+      nomeCanal = decodeURIComponent(ultimaParte).replace(/\.(m3u8|mp4|m3u|ts)$/i, '');
+      if (nomeCanal.length > 25) nomeCanal = nomeCanal.substring(0, 25);
+    }
+  } catch (e) {}
+
+  mapDestino.set(url, {
+    name: nomeCanal.toUpperCase(),
+    logo: 'https://via.placeholder.com/150/00adb5/ffffff?text=STREAM',
+    group: 'Personalizados',
+    tipo: 'canais',
+    url: url
+  });
+}
+
 // Parser de M3U
-function parseM3U(m3uText, mapDestino) {
+function parseM3U(m3uText, mapDestino, sourceUrl = '') {
   const lines = m3uText.split('\n');
   let currentItem = {};
+  let encontrouTags = false;
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
 
     if (line.startsWith('#EXTINF:')) {
+      encontrouTags = true;
       const nameMatch = line.split(',');
       const name = nameMatch.length > 1 ? nameMatch.slice(1).join(',').trim() : 'Sem Nome';
       
@@ -190,11 +236,22 @@ function parseM3U(m3uText, mapDestino) {
 
     } else if (line.startsWith('http://') || line.startsWith('https://')) {
       currentItem.url = line;
+      if (!currentItem.name) {
+        currentItem.name = 'Canal Stream';
+        currentItem.logo = 'https://via.placeholder.com/150';
+        currentItem.group = 'Geral';
+        currentItem.tipo = 'canais';
+      }
       if (currentItem.url && !mapDestino.has(currentItem.url)) {
         mapDestino.set(currentItem.url, { ...currentItem });
       }
       currentItem = {};
     }
+  }
+
+  // Se não continha estrutura M3U com #EXTINF, trata o URL fonte como stream único
+  if (!encontrouTags && sourceUrl) {
+    adicionarLinkDireto(sourceUrl, mapDestino);
   }
 }
 
@@ -273,7 +330,7 @@ function reproduzirMidia(item) {
     hlsInstance.destroy();
   }
 
-  if (Hls.isSupported() && item.url.includes('.m3u8')) {
+  if (Hls.isSupported() && (item.url.includes('.m3u8') || item.url.includes('live'))) {
     hlsInstance = new Hls();
     hlsInstance.loadSource(item.url);
     hlsInstance.attachMedia(video);
