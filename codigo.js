@@ -1,9 +1,11 @@
+const VERSAO_APP = "v1.2";
 let listaGlobalCanais = [];
 let categoriaAtual = '';
 let secaoAtual = 'canais';
 let hlsInstance = null;
 
 document.addEventListener('DOMContentLoaded', () => {
+  console.log(`Smart IPTV Player carregado na versão ${VERSAO_APP}`);
   const dadosSalvos = localStorage.getItem('iptv_cache_dados');
   if (dadosSalvos) {
     listaGlobalCanais = JSON.parse(dadosSalvos);
@@ -113,7 +115,6 @@ async function testarMultiplasListas() {
         linksValidos++;
       }
     } catch (e) {
-      // Mesmo com bloqueio de CORS no teste, conta como link direto tentando aceitá-lo
       const mapTemp = new Map();
       adicionarLinkDireto(url, mapTemp);
       totalCanaisGeral += mapTemp.size;
@@ -161,7 +162,6 @@ async function adicionarMultiplasListas() {
         }
         linksAdicionados++;
       } catch (err) {
-        // Se houver restrição de CORS ao tentar fazer o fetch do ficheiro, salva como stream direto
         adicionarLinkDireto(url, mapUnicos);
         linksAdicionados++;
       }
@@ -187,7 +187,6 @@ async function adicionarMultiplasListas() {
 function adicionarLinkDireto(url, mapDestino) {
   if (!url || mapDestino.has(url)) return;
 
-  // Extrai um nome amigável a partir do URL
   let nomeCanal = 'Canal Personalizado';
   try {
     const partes = url.split('/');
@@ -249,7 +248,6 @@ function parseM3U(m3uText, mapDestino, sourceUrl = '') {
     }
   }
 
-  // Se não continha estrutura M3U com #EXTINF, trata o URL fonte como stream único
   if (!encontrouTags && sourceUrl) {
     adicionarLinkDireto(sourceUrl, mapDestino);
   }
@@ -319,7 +317,7 @@ function renderizarGrid(itens) {
   });
 }
 
-// Reprodução de Mídia
+// Reprodução de Mídia com tratamento de HTTPS/HTTP
 function reproduzirMidia(item) {
   document.getElementById('current-title').innerText = item.name;
   document.getElementById('current-group').innerText = `Categoria: ${item.group}`;
@@ -330,15 +328,21 @@ function reproduzirMidia(item) {
     hlsInstance.destroy();
   }
 
-  if (Hls.isSupported() && (item.url.includes('.m3u8') || item.url.includes('live'))) {
+  let streamUrl = item.url;
+  
+  if (window.location.protocol === 'https:' && streamUrl.startsWith('http://')) {
+    console.warn('Aviso: O stream usa HTTP e a página usa HTTPS. O navegador poderá bloquear o vídeo por Mixed Content.');
+  }
+
+  if (Hls.isSupported() && (streamUrl.includes('.m3u8') || streamUrl.includes('live'))) {
     hlsInstance = new Hls();
-    hlsInstance.loadSource(item.url);
+    hlsInstance.loadSource(streamUrl);
     hlsInstance.attachMedia(video);
     hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
       video.play().catch(e => console.log("Autoplay bloqueado:", e));
     });
   } else {
-    video.src = item.url;
+    video.src = streamUrl;
     video.play().catch(e => console.log("Erro ao reproduzir:", e));
   }
 }
